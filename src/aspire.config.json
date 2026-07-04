@@ -1,0 +1,6 @@
+{
+  "appHost": {
+    "path": "Linq2dbCteColumnsReproduction.AppHost/Linq2dbCteColumnsReproduction.AppHost.csproj"
+  },
+  "channel": "stable"
+}

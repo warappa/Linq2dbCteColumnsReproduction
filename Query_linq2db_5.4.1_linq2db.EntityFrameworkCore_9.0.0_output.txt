@@ -1,0 +1,68 @@
+BeginTransaction(RepeatableRead)
+--  SqlServer.2008
+DECLARE @skip Int -- Int32
+SET     @skip = 0
+DECLARE @take Int -- Int32
+SET     @take = 20
+
+WITH [partHierarchy]
+(
+	[RootPartSortField],
+	[RootPartId],
+	[PartId],
+	[HierarchyLevel]
+)
+AS
+(
+	SELECT
+		[t2].[RootPartSortField],
+		[t2].[PartId],
+		[t2].[PartId],
+		[t2].[HierarchyLevel]
+	FROM
+		(
+			SELECT
+				[t1].[RootPartSortField],
+				[t1].[PartId],
+				[t1].[HierarchyLevel]
+			FROM
+				(
+					SELECT
+						[x].[Name] as [RootPartSortField],
+						[x].[Id] as [PartId],
+						0 as [HierarchyLevel],
+						ROW_NUMBER() OVER (ORDER BY [x].[Name]) as [RN]
+					FROM
+						[Parts] [x]
+				) [t1]
+			WHERE
+				[t1].[RN] > @skip AND [t1].[RN] <= @take
+		) [t2]
+	UNION ALL
+	SELECT
+		[cte].[RootPartSortField],
+		[cte].[RootPartId],
+		[reference].[ReferenceId],
+		[cte].[HierarchyLevel] + 1
+	FROM
+		[partHierarchy] [cte]
+			INNER JOIN [PartDataReferences] [reference] ON (Convert(Int, [reference].[Type]) & 1) <> 0 AND [reference].[ParentId] = [cte].[PartId]
+)
+SELECT
+	[key_data_result].[Id],
+	[detail].[Id],
+	[detail].[PartId],
+	[detail].[ScopedToId],
+	[detail].[CreatedAt],
+	[detail].[ModifiedAt],
+	[detail].[ExternalIdKind],
+	[detail].[ExternalId]
+FROM
+	(
+		SELECT DISTINCT
+			[me].[Id]
+		FROM
+			[Parts] [me]
+				INNER JOIN [partHierarchy] [id] ON [me].[Id] = [id].[PartId]
+	) [key_data_result]
+		INNER JOIN [PartExternalIdReadModel] [detail] ON [key_data_result].[Id] = [detail].[PartId]

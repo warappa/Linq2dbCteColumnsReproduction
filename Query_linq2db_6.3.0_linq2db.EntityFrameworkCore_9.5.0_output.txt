@@ -1,0 +1,47 @@
+BeginTransaction(RepeatableRead)
+-- SqlServer.2022
+DECLARE @skip Int -- Int32
+SET     @skip = 0
+DECLARE @take Int -- Int32
+SET     @take = 20
+
+WITH [partHierarchy] ([RootPartSortField])
+AS
+(
+	SELECT
+		[t1].[RootPartSortField]
+	FROM
+		(
+			SELECT
+				[x].[Name] as [RootPartSortField]
+			FROM
+				[Parts] [x]
+			ORDER BY
+				[x].[Name]
+			OFFSET @skip ROWS FETCH NEXT @take ROWS ONLY 
+		) [t1]
+	UNION ALL
+	SELECT
+		[t2].[RootPartSortField]
+	FROM
+		[partHierarchy] [t2]
+			INNER JOIN [PartDataReferences] [reference] ON (CAST([reference].[Type] AS Int) & 1) <> 0 AND [reference].[ParentId] = [t2].[PartId]
+)
+SELECT
+	[m_1].[Id],
+	[d].[Id],
+	[d].[PartId],
+	[d].[ScopedToId],
+	[d].[CreatedAt],
+	[d].[ModifiedAt],
+	[d].[ExternalIdKind],
+	[d].[ExternalId]
+FROM
+	(
+		SELECT DISTINCT
+			[me].[Id]
+		FROM
+			[Parts] [me]
+				INNER JOIN [partHierarchy] [id] ON [me].[Id] = [id].[PartId]
+	) [m_1]
+		INNER JOIN [PartExternalIdReadModel] [d] ON [m_1].[Id] = [d].[PartId]

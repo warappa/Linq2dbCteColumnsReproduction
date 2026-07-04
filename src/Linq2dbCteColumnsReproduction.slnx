@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Linq2dbCteColumnsReproduction.ApiService/Linq2dbCteColumnsReproduction.ApiService.csproj" />
+  <Project Path="Linq2dbCteColumnsReproduction.AppHost/Linq2dbCteColumnsReproduction.AppHost.csproj" />
+  <Project Path="Linq2dbCteColumnsReproduction.ServiceDefaults/Linq2dbCteColumnsReproduction.ServiceDefaults.csproj" />
+</Solution>
